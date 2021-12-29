@@ -502,7 +502,7 @@ app.post(
           [isuFromJIA.character, jiaIsuUUID]
         );
         const [[isu]] = await db.query<Isu[]>(
-          "SELECT * FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
+          "SELECT * FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ? LIMIT 1",
           [jiaUserId, jiaIsuUUID]
         );
 
@@ -546,7 +546,7 @@ app.get(
 
       const jiaIsuUUID = req.params.jia_isu_uuid;
       const [[isu]] = await db.query<Isu[]>(
-        "SELECT * FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
+        "SELECT * FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ? LIMIT 1",
         [jiaUserId, jiaIsuUUID]
       );
       if (!isu) {
@@ -1132,7 +1132,7 @@ app.post(
     >,
     res
   ) => {
-    const dropProbability = 0.5;
+    const dropProbability = 0.8;
     if (Math.random() <= dropProbability) {
       console.warn("drop post isu condition request");
       return res.status(202).send();
