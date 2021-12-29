@@ -604,6 +604,7 @@ app.get(
         return res.status(404).type("text").send("not found: isu");
       }
       images[`${jiaUserId}-${jiaIsuUUID}`] = row.image
+      res.setHeader('Cache-Control', 'max-age=3600')
       return res.status(200).send(row.image);
     } catch (err) {
       console.error(`db error: ${err}`);
@@ -1132,12 +1133,6 @@ app.post(
     >,
     res
   ) => {
-    const dropProbability = 0.8;
-    if (Math.random() <= dropProbability) {
-      console.warn("drop post isu condition request");
-      return res.status(202).send();
-    }
-
     const db = await pool.getConnection();
     try {
       const jiaIsuUUID = req.params.jia_isu_uuid;
