@@ -568,6 +568,10 @@ app.get(
   }
 );
 
+const images: {
+  [key in string]: Buffer
+} = {}
+
 // GET /api/isu/:jia_isu_uuid/icon
 // ISUのアイコンを取得
 app.get(
@@ -587,6 +591,11 @@ app.get(
       }
 
       const jiaIsuUUID = req.params.jia_isu_uuid;
+
+      if (Object.keys(images).includes(`${jiaUserId}-${jiaIsuUUID}`)) {
+        return res.status(200).send(images[`${jiaUserId}-${jiaIsuUUID}`]);
+      }
+
       const [[row]] = await db.query<(RowDataPacket & { image: Buffer })[]>(
         "SELECT `image` FROM `isu` WHERE `jia_user_id` = ? AND `jia_isu_uuid` = ?",
         [jiaUserId, jiaIsuUUID]
@@ -594,6 +603,7 @@ app.get(
       if (!row) {
         return res.status(404).type("text").send("not found: isu");
       }
+      images[`${jiaUserId}-${jiaIsuUUID}`] = row.image
       return res.status(200).send(row.image);
     } catch (err) {
       console.error(`db error: ${err}`);
