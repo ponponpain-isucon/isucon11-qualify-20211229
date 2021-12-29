@@ -320,19 +320,16 @@ app.post("/api/signout", async (req, res) => {
 app.get("/api/user/me", async (req, res) => {
   const db = await pool.getConnection();
   try {
-    let jiaUserId: string;
-    try {
-      jiaUserId = await getUserIdFromSession(req, db);
-    } catch (err) {
-      if (err instanceof ErrorWithStatus && err.status === 401) {
-        return res.status(401).type("text").send("you are not signed in");
-      }
-      console.error(err);
-      return res.status(500).send();
-    }
-
+    const jiaUserId: string = await getUserIdFromSession(req, db);
     const getMeResponse: GetMeResponse = { jia_user_id: jiaUserId };
     return res.status(200).json(getMeResponse);
+  } catch (err) {
+    console.error(err);
+
+    if (err instanceof ErrorWithStatus && err.status === 401) {
+      return res.status(401).type("text").send("you are not signed in");
+    }
+    return res.status(500).send();
   } finally {
     db.release();
   }
@@ -1149,7 +1146,8 @@ app.post(
         return res.status(404).type("text").send("not found: isu");
       }
 
-      for (const cond of request) {
+      const insertQueryPrefix = "INSERT INTO `isu_condition` (`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`) values "
+      const $insertData = request.map(async (cond) => {
         const timestamp = new Date(cond.timestamp * 1000);
 
         if (!isValidConditionFormat(cond.condition)) {
@@ -1157,14 +1155,14 @@ app.post(
           return res.status(400).type("text").send("bad request body");
         }
 
-        await db.query(
-          "INSERT INTO `isu_condition`" +
-            "	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)" +
-            "	VALUES (?, ?, ?, ?, ?)",
-          [jiaIsuUUID, timestamp, cond.is_sitting, cond.condition, cond.message]
-        );
-      }
+        return [jiaIsuUUID, timestamp, cond.is_sitting, cond.condition, cond.message];
+      });
 
+
+      const insertData = await Promise.all($insertData);
+      const templateSentence = [...Array(insertData.length)].map(() => "(?, ?, ?, ?)").join(", ")
+
+      await db.query(`${insertQueryPrefix} ${templateSentence}`, insertData.flat());
       await db.commit();
 
       return res.status(202).send();
