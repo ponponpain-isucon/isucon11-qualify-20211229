@@ -139,7 +139,9 @@ const upload = multer();
 
 const app = express();
 
-app.use(morgan("combined"));
+if (process.env.ENABLE_LOG_OUTPUT) {
+  app.use(morgan("combined"));
+}
 app.use("/assets", express.static(frontendContentsPath + "/assets"));
 app.use(express.json());
 app.use(
