@@ -1,16 +1,16 @@
-import { spawn } from "child_process";
-import { readFileSync } from "fs";
-import { readFile } from "fs/promises";
-import path from "path";
+import { spawn }                from "child_process";
+import { readFileSync }         from "fs";
+import { readFile }             from "fs/promises";
+import path                     from "path";
 
-import axios from "axios";
-import session from "cookie-session";
-import express from "express";
-import jwt from "jsonwebtoken";
-import morgan from "morgan";
-import multer, { MulterError } from "multer";
+import axios                    from "axios";
+import session                  from "cookie-session";
+import express                  from "express";
+import jwt                      from "jsonwebtoken";
+import morgan                   from "morgan";
+import multer, { MulterError }  from "multer";
 import mysql, { RowDataPacket } from "mysql2/promise";
-import qs from "qs";
+import qs                       from "qs";
 
 interface Config extends RowDataPacket {
   name: string;
@@ -1149,21 +1149,19 @@ app.post(
         return res.status(404).type("text").send("not found: isu");
       }
 
+      const values = request.map((cond) => [jiaIsuUUID, new Date(cond.timestamp * 1000), cond.is_sitting, cond.condition, cond.message ]);
       for (const cond of request) {
-        const timestamp = new Date(cond.timestamp * 1000);
-
         if (!isValidConditionFormat(cond.condition)) {
           await db.rollback();
           return res.status(400).type("text").send("bad request body");
         }
-
-        await db.query(
-          "INSERT INTO `isu_condition`" +
-            "	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)" +
-            "	VALUES (?, ?, ?, ?, ?)",
-          [jiaIsuUUID, timestamp, cond.is_sitting, cond.condition, cond.message]
-        );
       }
+      await db.query(
+        "INSERT INTO `isu_condition`" +
+          "	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)" +
+          "	VALUES ?",
+        values
+      );
 
       await db.commit();
 
