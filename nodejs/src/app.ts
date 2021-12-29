@@ -1125,7 +1125,7 @@ app.post(
     // TODO: 一定割合リクエストを落としてしのぐようにしたが、本来は全量さばけるようにすべき
     const dropProbability = 0.9;
     if (Math.random() <= dropProbability) {
-      console.warn("drop post isu condition request");
+      // console.warn("drop post isu condition request");
       return res.status(202).send();
     }
 
