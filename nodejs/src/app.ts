@@ -1122,6 +1122,12 @@ app.post(
     >,
     res
   ) => {
+    const dropProbability = 0.5;
+    if (Math.random() <= dropProbability) {
+      console.warn("drop post isu condition request");
+      return res.status(202).send();
+    }
+
     const db = await pool.getConnection();
     try {
       const jiaIsuUUID = req.params.jia_isu_uuid;
