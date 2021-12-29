@@ -1156,11 +1156,11 @@ app.post(
           return res.status(400).type("text").send("bad request body");
         }
       }
-      await db.query(
+      const query = db.query(
         "INSERT INTO `isu_condition`" +
           "	(`jia_isu_uuid`, `timestamp`, `is_sitting`, `condition`, `message`)" +
           "	VALUES ?",
-        values
+        [ values ]
       );
 
       await db.commit();
